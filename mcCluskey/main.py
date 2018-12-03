@@ -347,7 +347,7 @@ def main():
                 Chart[j][i] = 1
 
     # prime contains the index of the prime implicant terms
-    #prime = remove_redundant_list(find_minimum_cost(Chart))
+    # prime = remove_redundant_list(find_minimum_cost(Chart))
     primes = find_minimum_cost(Chart, unchecked)
     primes = remove_redundant(primes)
 
@@ -363,5 +363,8 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
-    A = input("\nPressione enter para sair")
+    while True:
+        main()
+        a = int(input("\nDigite:\n1 -> para continuar\n0 -> para sair\n"))
+        if not a:
+            break
