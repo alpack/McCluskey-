@@ -1,5 +1,42 @@
 import itertools
 
+def validate(strMinterms, strDontcare, strVarNum):
+    valid = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', ' ']
+    if strMinterms == '' or strVarNum == '':
+        return False
+    for i in strMinterms:
+        if i not in valid:
+            return False
+    for i in strDontcare:
+        if i not in valid:
+            return False
+    for i in strVarNum:
+        if i not in valid:
+            return False
+    minterms = strMinterms.split(' ')
+    dontcare = strDontcare.split(' ')
+    minterms = [int(i) for i in minterms]
+    if dontcare == ['']:
+        dontcare = []
+    else:
+        dontcare = [int(i) for i in dontcare]
+    varNum = int(strVarNum)
+    if varNum == 1 or varNum > 26:
+        return False
+    if len(set(minterms)) != len(minterms):
+        return False
+    if len(dontcare) != 0:
+        if len(set(dontcare)) != len(dontcare):
+            return False
+        if len(set(minterms) & set(dontcare)) != 0:
+            return False
+        if (2**varNum) <= max(dontcare):
+            return False
+
+    if (2**varNum) <= max(minterms):
+        return False
+    return minterms, dontcare
+
 # compare two binary strings, check where there is one difference
 def compBinary(s1, s2):
     count = 0
@@ -13,7 +50,6 @@ def compBinary(s1, s2):
     else:
         return False, None
 
-
 # compare if the number is same as implicant term
 # s1 should be the term
 def compBinarySame(term, number):
@@ -23,7 +59,6 @@ def compBinarySame(term, number):
                 return False
 
     return True
-
 
 # combine pairs and make new group
 def combinePairs(group, unchecked):
@@ -59,7 +94,6 @@ def combinePairs(group, unchecked):
 
     return next_group, unchecked
 
-
 # remove redundant lists in 2d list
 def remove_redundant(group):
     new_group = []
@@ -71,7 +105,6 @@ def remove_redundant(group):
         new_group.append(new)
     return new_group
 
-
 # remove redundant in 1d list
 def remove_redundant_list(list):
     new_list = []
@@ -79,7 +112,6 @@ def remove_redundant_list(list):
         if i not in new_list:
             new_list.append(i)
     return new_list
-
 
 # return True if empty
 def check_empty(group):
@@ -95,7 +127,6 @@ def check_empty(group):
         if count == 0:
             return True
     return False
-
 
 # find essential prime implicants ( col num of ones = 1)
 def find_prime(Chart):
@@ -114,7 +145,6 @@ def find_prime(Chart):
 
     return prime
 
-
 def check_all_zero(Chart):
     for i in Chart:
         for j in i:
@@ -122,8 +152,7 @@ def check_all_zero(Chart):
                 return False
     return True
 
-
-# find max value in list
+# Find max value in list
 def find_max(l):
     max = -1
     index = 0
@@ -133,25 +162,22 @@ def find_max(l):
             index = i
     return index
 
-
-# multiply two terms (ex. (p1 + p2)(p1+p4+p5) )..it returns the product
+# Multiply two terms (ex. (p1 + p2)(p1+p4+p5) )..it returns the product
 def multiplication(list1, list2):
     list_result = []
-    # if empty
+
     if len(list1) == 0 and len(list2) == 0:
         return list_result
-    # if one is empty
+
     elif len(list1) == 0:
         return list2
-    # if another is empty
+
     elif len(list2) == 0:
         return list1
 
-    # both not empty
     else:
         for i in list1:
             for j in list2:
-                # if two term same
                 if i == j:
                     # list_result.append(sorted(i))
                     list_result.append(i)
@@ -159,14 +185,11 @@ def multiplication(list1, list2):
                     # list_result.append(sorted(list(set(i+j))))
                     list_result.append(list(set(i+j)))
 
-        # sort and remove redundant lists and return this list
         list_result.sort()
         return list(list_result for list_result, _ in itertools.groupby(list_result))
 
-
-# petrick's method
+# Petrick's Method
 def petrick_method(Chart):
-    # initial P
     P = []
     for col in range(len(Chart[0])):
         p = []
@@ -174,39 +197,36 @@ def petrick_method(Chart):
             if Chart[row][col] == 1:
                 p.append([row])
         P.append(p)
-    # do multiplication
+
     for l in range(len(P)-1):
         P[l+1] = multiplication(P[l], P[l+1])
 
     P = sorted(P[len(P)-1], key=len)
     final = []
-    # find the terms with min length = this is the one with lowest cost (optimized result)
+
     min = len(P[0])
     for i in P:
         if len(i) == min:
             final.append(i)
         else:
             break
-    # final is the result of petrick's method
+
     return final
 
-# chart = n*n list
-
-
-def find_minimum_cost(Chart, unchecked):
+def find_minimum_cost(Chart, unchecked, flag):
     P_final = []
-    # essential_prime = list with terms with only one 1 (Essential Prime Implicants)
     essential_prime = find_prime(Chart)
     essential_prime = remove_redundant_list(essential_prime)
 
-    # print out the essential primes
+    # Essential Prime Implicants
     if len(essential_prime) > 0:
-        s = "\nEssential Prime Implicants :\n"
+        s = " "
         for i in range(len(unchecked)):
             for j in essential_prime:
                 if j == i:
                     s = s+binary_to_letter(unchecked[i])+' , '
-        #print(s[:(len(s)-3)])
+        if (flag == 2):
+            return s[:(len(s)-3)]
 
     # modifiy the chart to exclude the covered terms
     for i in range(len(essential_prime)):
@@ -219,16 +239,7 @@ def find_minimum_cost(Chart, unchecked):
     if check_all_zero(Chart) == True:
         P_final = [essential_prime]
     else:
-        # petrick's method
         P = petrick_method(Chart)
-
-        # find the one with minimum cost
-        # see "Introduction to Logic Design" - Alan B.Marcovitz Example 4.6 pg 213
-        '''
-        Although Petrick's method gives the minimum terms that cover all,
-        it does not mean that it is the solution for minimum cost!
-        '''
-
         P_cost = []
         for prime in P:
             count = 0
@@ -247,23 +258,17 @@ def find_minimum_cost(Chart, unchecked):
             for j in essential_prime:
                 if j not in i:
                     i.append(j)
-
     return P_final
 
 # calculate the number of literals
-
-
 def cal_efficient(s):
     count = 0
     for i in range(len(s)):
         if s[i] != '-':
             count += 1
-
     return count
 
 # print the binary code to letter
-
-
 def binary_to_letter(s):
     out = ''
     c = 'a'
@@ -294,35 +299,25 @@ def binary_to_letter(s):
             c = chr(ord(c)+1)
     return out
 
-
-# main function
-def main():
-    # get the num of variables (bits) as input
-    n_var = int(input("Insira o número de variáves(bits): "))
-    # get the minterms as input
-    minterms = input("Insira os minitermos separados por espaços : ")
-    a = minterms.split()
+def solve(mintermsList, varsNum, flag):
     # put the numbers in list in int form
-    a = list(map(int, a))
+    minterms = list(map(int, mintermsList))
+    group = [[] for x in range(varsNum+1)]
 
-    # make a group list
-    group = [[] for x in range(n_var+1)]
-
-    for i in range(len(a)):
-        # convert to binary
-        a[i] = bin(a[i])[2:]
-        if len(a[i]) < n_var:
+    # convert to binary
+    for i in range(len(minterms)):
+        minterms[i] = bin(minterms[i])[2:]
+        if len(minterms[i]) < varsNum:
             # add zeros to fill the n-bits
-            for j in range(n_var - len(a[i])):
-                a[i] = '0' + a[i]
-        # if incorrect input
-        elif len(a[i]) > n_var:
+            for j in range(varsNum - len(minterms[i])):
+                minterms[i] = '0' + minterms[i]
+
+        elif len(minterms[i]) > varsNum:
             print('\nError : Selecione o número correto de variáveis(bits)\n')
             return
-        # count the num of 1
-        index = a[i].count('1')
-        # group by num of 1 separately
-        group[index].append(a[i])
+
+        index = minterms[i].count('1')
+        group[index].append(minterms[i])
 
     all_group = []
     unchecked = []
@@ -332,36 +327,31 @@ def main():
         next_group, unchecked = combinePairs(group, unchecked)
         group = remove_redundant(next_group)
 
-    s = "\nImplicações dos primos :\n"
+    s = ""
     for i in unchecked:
         s = s + binary_to_letter(i) + " , "
-    print(s[:(len(s)-3)])
+    
+    if flag == 1:
+        return(s[:(len(s)-3)])
 
     # make the prime implicant chart
-    Chart = [[0 for x in range(len(a))] for x in range(len(unchecked))]
+    Chart = [[0 for x in range(len(minterms))] for x in range(len(unchecked))]
 
-    for i in range(len(a)):
+    for i in range(len(minterms)):
         for j in range(len(unchecked)):
             # term is same as number
-            if compBinarySame(unchecked[j], a[i]):
+            if compBinarySame(unchecked[j], minterms[i]):
                 Chart[j][i] = 1
-
-    # prime contains the index of the prime implicant terms
-    #prime = remove_redundant_list(find_minimum_cost(Chart))
-    primes = find_minimum_cost(Chart, unchecked)
-    primes = remove_redundant(primes)
-
-    print("\n--  Respostas --\n")
-
+    
+    if (flag == 2):
+        return (remove_redundant_list(find_minimum_cost(Chart, unchecked, flag)))
+    
+    primes = remove_redundant_list(find_minimum_cost(Chart, unchecked, flag))
+    
     for prime in primes:
         s = ''
         for i in range(len(unchecked)):
             for j in prime:
                 if j == i:
                     s = s+binary_to_letter(unchecked[i])+' + '
-        print(s[:(len(s)-3)])
-
-
-if __name__ == "__main__":
-    main()
-    A = input("\nPressione enter para sair")
+        return s[:(len(s)-3)]
